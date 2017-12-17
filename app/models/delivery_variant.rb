@@ -1,0 +1,3 @@
+class DeliveryVariant < ApplicationRecord
+  has_many :orders
+end
