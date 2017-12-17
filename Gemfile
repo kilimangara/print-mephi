@@ -17,6 +17,7 @@ gem 'redis-rails'
 gem 'pry'
 gem 'rails_admin', '~> 1.2'
 gem 'sidekiq'
+gem 'uglifier'
 # See https://github.com/rails/execjs#readme for more supported runtimes
 # gem 'therubyracer', platforms: :ruby
 
