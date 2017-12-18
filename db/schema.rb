@@ -10,10 +10,17 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20171216230711) do
+ActiveRecord::Schema.define(version: 20171217220447) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
+
+  create_table "black_lists", force: :cascade do |t|
+    t.integer "chat_id"
+    t.string "reason", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
 
   create_table "categories", force: :cascade do |t|
     t.integer "position", null: false
@@ -49,6 +56,15 @@ ActiveRecord::Schema.define(version: 20171216230711) do
     t.integer "price", default: 0
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+  end
+
+  create_table "feedbacks", force: :cascade do |t|
+    t.bigint "client_id"
+    t.string "text", null: false
+    t.integer "rate", default: 5
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["client_id"], name: "index_feedbacks_on_client_id"
   end
 
   create_table "merchants", force: :cascade do |t|

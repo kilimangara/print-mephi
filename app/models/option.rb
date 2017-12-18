@@ -1,3 +1,3 @@
 class Option < ApplicationRecord
-  validates :intro, presense: true
+  validates :intro, presence: true
 end

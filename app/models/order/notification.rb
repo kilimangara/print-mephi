@@ -1,8 +1,9 @@
 class Order
   module Notification
+    extend ActiveSupport::Concern
 
-    included do
-      after_create :send_notifcation
+    def self.included(receipent)
+
     end
 
     def send_notification

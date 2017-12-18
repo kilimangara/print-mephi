@@ -2,5 +2,162 @@ class UserBotController < Telegram::Bot::UpdatesController
   include Telegram::Bot::UpdatesController::MessageContext
   context_to_action!
 
+  include CategoryService
+  include ProductService
+  include FieldsService
+  include OrderService
+  include ReplyService
+
+  before_action :chat_banned
+
+  before_action :shop_active
+
+  before_action :define_category, only: [:category, :product]
+
+  before_action :last_not_fulfilled, only: [:custom_fields]
+
+
+  INTRO_KB = 'Продолжить'.freeze
+
+  def start(*args)
+    value = !args.empty? ? args.join(' ') : nil
+    if value == INTRO_KB
+      category
+      return
+    end
+    session[:cart] = []
+    session[:category_parent_id] = nil
+    session[:order_fields] = []
+    session[:variant_id] = nil
+    session[:messages_to_delete] = []
+    o = Option.first
+    text = "#{o.intro}\nСегодня работаем так: #{o.working_time}"
+    respond_with :message, text: text, reply_markup: intro_keyboard
+
+  end
+
+  def login(*args)
+
+  end
+
+  def message(message)
+    start([message['text']])
+  end
+
+  def category(*args)
+    value = !args.empty? ? args.join(' ') : nil
+    save_context :category
+    return category_intro_message unless value
+    if value == CategoryService::OPEN_CURRENT_CATEGORY
+      save_context :product
+      return respond_with :message, text: 'Выберите товар', reply_markup: build_products_keyboard(parent_category)
+    elsif value == CategoryService::BACK_WORD
+      save_context :category
+      categories = Category.where(parent_category_id: parent_category.parent_category_id)
+      parent_id = parent_category.parent_category_id
+      session[:category_parent_id] = parent_id
+      return respond_with :message, text: "Вы в категории #{parent_category_name}",
+                          reply_markup: build_category_keyboard(categories, parent_id)
+    elsif value == CategoryService::IN_CART_WORD
+      return cart
+    end
+    c = Category.where(name: value, hidden: false).first
+    return category_missing unless c
+    inner_c = c.inner_categories
+    if inner_c.empty?
+      save_context :product
+      respond_with :message, text:'Выберите товар',
+                   reply_markup: build_products_keyboard(c.products.where(hidden: false))
+    else
+      session[:category_parent_id] = c.id
+      respond_with :message, text: "Вы в категории #{c.name}", reply_markup: build_category_keyboard(inner_c)
+    end
+  end
+
+  def product(*args)
+    value = !args.empty? ? args.join(' ') : nil
+    save_context :product
+    if session[:variant_id]
+      q = value.to_i
+      add_product(session[:variant_id], q)
+      respond_with :message, text: 'Товар добавлен в корзину'
+      session[:variant_id] = nil
+      session[:category_parent_id] = nil
+      category_intro_message
+      save_context :category
+      return
+    end
+    save_context :product
+    if value == ProductService::BACK_WORD
+      category
+    end
+    product = Product.where(name: value, hidden: false).first
+    return product_missing unless product
+    session[:variant_id] = product.variants.first.id
+    respond_with :message, text: 'Теперь выберите количество'
+  end
+
+
+  def custom_fields(*)
+
+  end
+
+
+  def cart(*args)
+    value = !args.empty? ? args.join(' ') : nil
+    save_context :cart
+    return show_cart unless value
+    if value == OrderService::CREATE_ORDER
+
+    elsif value == OrderService::BACK
+      category
+    end
+
+  end
+
+  def callback_query(data)
+    return unless data
+    json_data = JSON.parse(data)
+    case json_data['type']
+      when OrderService::CALLBACK_DELETE_POSITION
+        session[:cart].delete_at(json_data['index'])
+        delete_messages
+        cart
+        answer_callback_query 'Позиция удалена'
+      else answer_callback_query 'Произошла ошибка'
+    end
+  end
+
+  def help(*args)
+
+  end
+
+  def logged_in?
+    @client ||= Client.where(id: session[:user_id]).first
+  end
+
+  private
+
+  def chat_banned
+    bl = BlackList.where(chat_id: chat['id']).first
+    respond_with :message, text: "Вы забанены!\n #{bl.reason}" if bl
+    raise :abort if bl
+  end
+
+  def shop_active
+    o = Option.first
+    respond_with :message, text: 'Бот временно выключен :(' unless o.active
+    raise :abort unless o.active
+  end
+
+  def intro_keyboard
+    {
+        keyboard: [[INTRO_KB]],
+        resize_keyboard: true,
+        one_time_keyboard: true,
+        selective: true
+    }
+  end
+
 
 end
