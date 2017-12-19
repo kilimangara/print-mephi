@@ -16,6 +16,9 @@ class UserBotController < Telegram::Bot::UpdatesController
 
   before_action :last_not_fulfilled, only: [:custom_fields]
 
+  before_action :logged_in?, only: %i[custom_fields delivery]
+
+
 
   INTRO_KB = 'Продолжить'.freeze
 
@@ -30,14 +33,21 @@ class UserBotController < Telegram::Bot::UpdatesController
     session[:order_fields] = []
     session[:variant_id] = nil
     session[:messages_to_delete] = []
+    session[:total] = 0
     o = Option.first
     text = "#{o.intro}\nСегодня работаем так: #{o.working_time}"
     respond_with :message, text: text, reply_markup: intro_keyboard
 
   end
 
-  def login(*args)
-
+  def login(*)
+    return if logged_in?
+    contact = payload['contact']
+    if contact
+      @user = Client.find_or_create_by(phone: contact['phone_number'], name: contact['first_name'],
+                                       chat_id: chat['id'])
+      session[:client_id] = @user.id
+    end
   end
 
   def message(message)
@@ -99,16 +109,50 @@ class UserBotController < Telegram::Bot::UpdatesController
 
 
   def custom_fields(*)
+    save_context :custom_fields
+    unless last_not_fulfilled
+      choose_delivery
+      save_context :delivery
+    end
+    if resolve_by_type!(to_fulfill[:field_type], payload)
+      if !last_not_fulfilled
+        choose_delivery
+        save_context :delivery
+      else
+        send_step
+      end
+    else
+      respond_with :message, text: 'Неправильный формат данных'
+    end
+  end
 
+  def delivery(*args)
+    save_context :delivery
+    value = !args.empty? ? args.join(' ') : nil
+    delivery = DeliveryVariant.where(active: true, name: value).first
+    return no_such_delivery unless delivery
+    session[:delivery] = delivery.id
+    order = build_order
+    binding.pry
+    if order.errors.empty?
+      after_order
+      respond_with :message, text: "Ваш заказ № #{order.id} принят."
+      return category
+    end
+    respond_with :message, text: "Возникла ошибка"
   end
 
 
   def cart(*args)
     value = !args.empty? ? args.join(' ') : nil
+    login
     save_context :cart
     return show_cart unless value
     if value == OrderService::CREATE_ORDER
-
+      pre_build_order_fields
+      last_not_fulfilled
+      send_step
+      save_context :custom_fields
     elsif value == OrderService::BACK
       category
     end
@@ -133,7 +177,7 @@ class UserBotController < Telegram::Bot::UpdatesController
   end
 
   def logged_in?
-    @client ||= Client.where(id: session[:user_id]).first
+    @client ||= Client.where(id: session[:client_id]).first
   end
 
   private
