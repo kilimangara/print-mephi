@@ -9,7 +9,7 @@ class AdminBotController < Telegram::Bot::UpdatesController
   def register(*args)
     value = !args.empty? ? args.join(' ') : nil
     merchant = Merchant.where(phone: value).first
-    respond_with :message, text: 'Продавец с таким телефоном не найден' unless merchant
+    return respond_with :message, text: 'Продавец с таким телефоном не найден' unless merchant
     merchant.chat_id = chat['id']
     merchant.save
     respond_with :message, text: 'Теперь Вы будете получать уведомления о заказах'
