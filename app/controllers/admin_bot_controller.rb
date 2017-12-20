@@ -74,7 +74,7 @@ class AdminBotController < Telegram::Bot::UpdatesController
   def check_register
     merchant = Merchant.where(chat_id: chat['id']).first
     respond_with :message, text: 'У вас нет прав доступа к этим действиям' unless merchant
-    raise :abort unless merchant
+    throw :abort unless merchant
   end
 
 end

@@ -184,13 +184,13 @@ class UserBotController < Telegram::Bot::UpdatesController
   def chat_banned
     bl = BlackList.where(chat_id: chat['id']).first
     respond_with :message, text: "Вы забанены!\n #{bl.reason}" if bl
-    raise :abort if bl
+    throw :abort if bl
   end
 
   def shop_active
     o = Option.first
     respond_with :message, text: 'Бот временно выключен :(' unless o.active
-    raise :abort unless o.active
+    throw :abort unless o.active
   end
 
   def intro_keyboard
