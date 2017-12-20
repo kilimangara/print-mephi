@@ -99,7 +99,7 @@ class UserBotController < Telegram::Bot::UpdatesController
     end
     save_context :product
     if value == ProductService::BACK_WORD
-      category
+      return category
     end
     product = Product.where(name: value, hidden: false).first
     return product_missing unless product
