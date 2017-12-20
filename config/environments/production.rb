@@ -74,7 +74,7 @@ Rails.application.configure do
   config.active_support.deprecation = :notify
 
   config.telegram_updates_controller.session_store = :redis_store,
-      "#{ENV['REDISCLOUD_URL']}/0/cache",
+      'redis://rediscloud:kfbpaBTtq19LsF1Z@redis-11173.c6.eu-west-1-1.ec2.cloud.redislabs.com:11173/0/cache',
       {expires_in: 1.month }
 
   # Use default logging formatter so that PID and timestamp are not suppressed.
