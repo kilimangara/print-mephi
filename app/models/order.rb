@@ -12,6 +12,8 @@ class Order < ApplicationRecord
   include CustomFields
 
   after_update :price_changed, if: :price_changed?
+  after_update :order_canceled, if: :canceled_changed?
+  after_update :order_fulfilled, if: :fulfilled_changed?
 
 
   def price_changed
@@ -20,14 +22,43 @@ class Order < ApplicationRecord
     bot.send_message(chat_id: chat_id, text: "Ваш заказ №#{id} оценен в #{total} рублей.")
   end
 
+  def order_canceled
+    bot = Telegram.bots[:user]
+    chat_id = client.chat_id
+    bot.send_message(chat_id: chat_id, text: "Ваш заказ №#{id} отменен")
+  end
+
+  def order_fulfilled
+    bot = Telegram.bots[:user]
+    chat_id = client.chat_id
+    bot.send_message(chat_id: chat_id, text: "Ваш заказ №#{id} готов")
+  end
+
   def price_changed?
     total_changed?
   end
+
 
   def order_lines_as_text
     text = "В заказе:\n"
     order_lines.each_with_index do |ol, index|
       text << "    #{index + 1 }. #{ol.name} x #{ol.quantity}"
+    end
+    text
+  end
+
+  def order_values_as_text
+    text = ''
+    order_values.each do |ov|
+      case ov.field_type
+        when CustomField::TEXT_TYPE
+          text << "Комментарий #{ov.value}\n"
+        when CustomField::FILE_TYPE
+          user_bot = Telegram.bots[:user]
+          res = user_bot.get_file(file_id: ov.value)
+          file_path = res['result']['file_path']
+          text << "Ссылка на файл:\n#{FileService.format_link(user_bot.token, file_path)}"
+      end
     end
     text
   end

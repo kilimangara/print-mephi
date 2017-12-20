@@ -133,7 +133,6 @@ class UserBotController < Telegram::Bot::UpdatesController
     return no_such_delivery unless delivery
     session[:delivery] = delivery.id
     order = build_order
-    binding.pry
     if order.errors.empty?
       after_order
       respond_with :message, text: "Ваш заказ № #{order.id} принят."

@@ -61,7 +61,7 @@ module OrderService
       session[:messages_to_delete].push(response['result']['message_id'])
     end
     session[:total] = 0
-    response = respond_with :message, text: "Сумма заказа #{total_price}. Заказ будет переоценен продавцом!",
+    response = respond_with :message, text: "Сумма заказа #{total_price}.\nЗаказ будет переоценен продавцом!",
                                       reply_markup: build_cart_keyboard
     session[:messages_to_delete].push(response['result']['message_id'])
   end
