@@ -46,7 +46,7 @@ module OrderService
   end
 
   def show_cart
-    return respond_with :message, text: 'Корзина пуста' if session[:cart].empty?
+    return respond_with :message, text: 'Корзина пуста', reply_markup: build_cart_keyboard if session[:cart].empty?
     ids = !session[:cart].empty? ? session[:cart].map { |i| i[:variant] } : []
     total_price = 0
     variants = ids.empty? ? [] : Variant.find(ids)
