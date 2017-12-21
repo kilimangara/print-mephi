@@ -133,7 +133,7 @@ class UserBotController < Telegram::Bot::UpdatesController
     delivery = DeliveryVariant.where(active: true, name: value).first
     return no_such_delivery unless delivery
     session[:delivery] = delivery.id
-    session[:total] += delivery.cost
+    session[:total] += delivery.price
     order = build_order
     if order.errors.empty?
       after_order
