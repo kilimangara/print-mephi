@@ -33,7 +33,8 @@ module CategoryService
   def category_intro_message
     categories = Category.where(parent_category: parent_category, hidden: false).order(:position)
     reply_markup = build_category_keyboard(categories)
-    self.respond_with :message, text: "Вы в категории #{parent_category_name || 'Каталог'}", reply_markup: reply_markup
+    text = parent_category ? "Вы в категории #{parent_category_name}" : "Что желаешь?"
+    self.respond_with :message, text: text, reply_markup: reply_markup
   end
 
   def category_missing

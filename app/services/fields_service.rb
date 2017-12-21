@@ -17,7 +17,7 @@ module FieldsService
   def send_step
     case to_fulfill[:field_type]
       when CustomField::FILE_TYPE
-        respond_with :message, text: 'Отправьте фотографию'
+        respond_with :message, text: 'Отправьте документ'
       when CustomField::TEXT_TYPE
         respond_with :message, text: 'Отправьте комментарий'
       else respond_with :message, text: 'Идем дальше'

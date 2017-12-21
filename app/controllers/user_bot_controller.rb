@@ -66,7 +66,8 @@ class UserBotController < Telegram::Bot::UpdatesController
       categories = Category.where(parent_category_id: parent_category.parent_category_id)
       parent_id = parent_category.parent_category_id
       session[:category_parent_id] = parent_id
-      return respond_with :message, text: "Вы в категории #{parent_category_name}",
+      text = parent_category ? "Вы в категории #{parent_category_name}" : "Что желаешь?"
+      return respond_with :message, text: text,
                           reply_markup: build_category_keyboard(categories, parent_id)
     elsif value == CategoryService::IN_CART_WORD
       return cart
@@ -76,7 +77,7 @@ class UserBotController < Telegram::Bot::UpdatesController
     inner_c = c.inner_categories
     if inner_c.empty?
       save_context :product
-      respond_with :message, text:'Выберите товар',
+      respond_with :message, text: 'Выбирай',
                    reply_markup: build_products_keyboard(c.products.where(hidden: false))
     else
       session[:category_parent_id] = c.id
@@ -132,10 +133,12 @@ class UserBotController < Telegram::Bot::UpdatesController
     delivery = DeliveryVariant.where(active: true, name: value).first
     return no_such_delivery unless delivery
     session[:delivery] = delivery.id
+    session[:total] += delivery.cost
     order = build_order
     if order.errors.empty?
       after_order
-      respond_with :message, text: "Ваш заказ № #{order.id} принят."
+      respond_with :message,
+                   text: "Ваш заказ № #{order.id} принят в обработку.\n#{order.delivery_variant_as_text}\n#{order.order_values_as_text}\n#{order.order_lines_as_text}"
       return category
     end
     respond_with :message, text: "Возникла ошибка"

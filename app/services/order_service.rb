@@ -46,6 +46,7 @@ module OrderService
   end
 
   def show_cart
+    return respond_with :message, text: 'Корзина пуста' if session[:cart].empty?
     ids = !session[:cart].empty? ? session[:cart].map { |i| i[:variant] } : []
     total_price = 0
     variants = ids.empty? ? [] : Variant.find(ids)
@@ -60,8 +61,8 @@ module OrderService
       }
       session[:messages_to_delete].push(response['result']['message_id'])
     end
-    session[:total] = 0
-    response = respond_with :message, text: "Сумма заказа #{total_price}.\nЗаказ будет переоценен продавцом!",
+    session[:total] = total_price
+    response = respond_with :message, text: "Сумма заказа #{total_price} рублей.\nЗаказ будет переоценен продавцом!",
                                       reply_markup: build_cart_keyboard
     session[:messages_to_delete].push(response['result']['message_id'])
   end

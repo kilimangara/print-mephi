@@ -19,7 +19,7 @@ class Order < ApplicationRecord
   def price_changed
     bot = Telegram.bots[:user]
     chat_id = client.chat_id
-    bot.send_message(chat_id: chat_id, text: "Ваш заказ №#{id} оценен в #{total} рублей.")
+    bot.send_message(chat_id: chat_id, text: "Ваш заказ №#{id} находится в исполнении.\nСумма заказа #{total} рублей.")
   end
 
   def order_canceled
@@ -31,13 +31,16 @@ class Order < ApplicationRecord
   def order_fulfilled
     bot = Telegram.bots[:user]
     chat_id = client.chat_id
-    bot.send_message(chat_id: chat_id, text: "Ваш заказ №#{id} готов")
+    bot.send_message(chat_id: chat_id, text: "Ваш заказ №#{id} готов.\nСумма заказа #{total} рублей.")
   end
 
   def price_changed?
     total_changed?
   end
 
+  def delivery_variant_as_text
+    "Вариант доставки #{delivery_variant.name}"
+  end
 
   def order_lines_as_text
     text = "В заказе:\n"
