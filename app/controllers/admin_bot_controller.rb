@@ -4,6 +4,8 @@ class AdminBotController < Telegram::Bot::UpdatesController
 
   include AdminOrderService
 
+  DEFAULT_REASON = ''
+
   before_action :check_register, only: %i[non_priced_orders orders set_cost]
 
   def register(*args)
@@ -83,6 +85,11 @@ class AdminBotController < Telegram::Bot::UpdatesController
         client.bonus_points = 0 if client.bonus_points < 0
         client.save
         answer_callback_query 'Бонусы списаны'
+      when AdminOrderService::CALLBACK_TYPE_BAN_USER
+        client = Client.where(id: json_data['client_id']).first
+        return unless client
+        BlackList.create(reason: DEFAULT_REASON, chat: client.chat_id)
+        answer_callback_query 'Добавлен в черный список'
       else answer_callback_query 'Произошла ошибка'
     end
   end

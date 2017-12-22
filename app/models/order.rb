@@ -11,9 +11,13 @@ class Order < ApplicationRecord
   include Notification
   include CustomFields
 
+  ORDER_LIMIT = 3
+
   after_update :price_changed, if: :price_changed?
   after_update :order_canceled, if: :canceled_changed?
   after_update :order_fulfilled, if: :fulfilled_changed?
+
+  after_create :notify_spam, if: :spam?
 
 
   def price_changed
@@ -50,6 +54,10 @@ class Order < ApplicationRecord
     text
   end
 
+  def spam?
+    Order.where('created_at >= ? AND client_id', 5.minutes.ago, client.id).count >= ORDER_LIMIT
+  end
+
   def order_values_as_text
     text = ''
     order_values.each do |ov|
@@ -60,7 +68,7 @@ class Order < ApplicationRecord
           user_bot = Telegram.bots[:user]
           res = user_bot.get_file(file_id: ov.value)
           file_path = res['result']['file_path']
-          text << "Ссылка на файл:\n#{FileService.format_link(user_bot.token, file_path)}"
+          text << "Ссылка на файл:\n#{FileService.format_link(user_bot.token, file_path)}\n"
       end
     end
     text

@@ -3,6 +3,7 @@ module AdminOrderService
   CALLBACK_TYPE_CANCEL_ORDER = 1
   CALLBACK_TYPE_ORDER_FULFILLED = 2
   CALLBACK_TYPE_CLIENT_BONUS = 3
+  CALLBACK_TYPE_BAN_USER = 4
 
   def format_all_text(order)
     "Заказ №#{order.id}\n#{order.order_lines_as_text}\n#{order.order_values_as_text}\n#{order.client.format_as_text}\nСтоимость: #{order.total}"

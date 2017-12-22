@@ -15,5 +15,18 @@ class Order
         bot.send_message(chat_id: m.chat_id, text: text) if m.chat_id
       end
     end
+
+    def notify_spam
+      bot = Telegram.bots[:admin]
+      markup = {
+          inline_keyboard:[
+              [text:'Забанить!', callback_data: JSON.generate(client_id: client.id, type: AdminOrderService::CALLBACK_TYPE_BAN_USER)]
+          ]
+      }
+      text = "#{client.format_as_text}\n Делает подозрительно много заказов ..."
+      Merchant.all.each do |m|
+        bot.send_message(chat_id: m.chat_id, text: text, reply_markup: markup) if m.chat_id
+      end
+    end
   end
 end
