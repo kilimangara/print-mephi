@@ -49,6 +49,7 @@ module OrderService
     return respond_with :message, text: 'Корзина пуста', reply_markup: build_cart_keyboard if session[:cart].empty?
     ids = !session[:cart].empty? ? session[:cart].map { |i| i[:variant] } : []
     total_price = 0
+    respond_with :message, text: "Часы работы сегодня: #{Option.first.working_time}"
     variants = ids.empty? ? [] : Variant.find(ids)
     variants.each_with_index do |variant, index|
       quantity = session[:cart].at(index)[:quantity]

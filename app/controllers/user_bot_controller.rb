@@ -23,7 +23,10 @@ class UserBotController < Telegram::Bot::UpdatesController
   def start(*args)
     value = !args.empty? ? args.join(' ') : nil
     if value == INTRO_KB
-      category
+      pre_build_order_fields
+      last_not_fulfilled
+      send_step
+      save_context :custom_fields
       return
     end
     session[:cart] = []
@@ -50,7 +53,7 @@ class UserBotController < Telegram::Bot::UpdatesController
 
   def bonus(*)
     option = Option.first
-    return respond_with :message, text:'Акция закончилась' unless option.action_active
+    return respond_with :message, text: 'Акция закончилась' unless option.action_active
     save_context :bonus
     login
     return respond_with :message, text: 'Зарегестрируйтесь для участия в акции', reply_markup:{
@@ -112,9 +115,7 @@ class UserBotController < Telegram::Bot::UpdatesController
       respond_with :message, text: 'Товар добавлен в корзину'
       session[:variant_id] = nil
       session[:category_parent_id] = nil
-      category_intro_message
-      save_context :category
-      return
+      return cart
     end
     save_context :product
     if value == ProductService::BACK_WORD
@@ -123,20 +124,19 @@ class UserBotController < Telegram::Bot::UpdatesController
     product = Product.where(name: value, hidden: false).first
     return product_missing unless product
     session[:variant_id] = product.variants.first.id
-    respond_with :message, text: 'Теперь выберите количество'
+    respond_with :message, text: 'Теперь выберите количество экземлляров'
   end
 
 
   def custom_fields(*)
     save_context :custom_fields
     unless last_not_fulfilled
-      choose_delivery
+      category
       save_context :delivery
     end
     if resolve_by_type!(to_fulfill[:field_type], payload)
       if !last_not_fulfilled
-        choose_delivery
-        save_context :delivery
+        category
       else
         send_step
       end
@@ -169,11 +169,11 @@ class UserBotController < Telegram::Bot::UpdatesController
     save_context :cart
     return show_cart unless value
     if value == OrderService::CREATE_ORDER
-      pre_build_order_fields
-      last_not_fulfilled
-      send_step
-      save_context :custom_fields
+      save_context :delivery
+      choose_delivery
     elsif value == OrderService::BACK
+      session[:total] = 0
+      session[:cart] = []
       category
     end
 
