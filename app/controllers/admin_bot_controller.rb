@@ -4,7 +4,7 @@ class AdminBotController < Telegram::Bot::UpdatesController
 
   include AdminOrderService
 
-  DEFAULT_REASON = ''
+  DEFAULT_REASON = 'Слишком много заказов'
 
   before_action :check_register, only: %i[non_priced_orders orders set_cost]
 
