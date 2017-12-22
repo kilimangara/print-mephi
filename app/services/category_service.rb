@@ -3,6 +3,8 @@ module CategoryService
   BACK_WORD = '← Назад'.freeze
   OPEN_CURRENT_CATEGORY = 'Что в этой категории?'.freeze
   IN_CART_WORD = 'В корзину'.freeze
+  ACTION_WORD = 'Акция'.freeze
+  REGISTER_TO_ACTION_WORD = 'Зарегестрируйтесь, чтобы участвовать в акции'.freeze
 
   attr_reader :parent_category, :parent_category_name
 
@@ -22,6 +24,10 @@ module CategoryService
       kb.append([OPEN_CURRENT_CATEGORY]) unless c.products.empty?
     end
     kb.append([IN_CART_WORD]) unless self.session[:cart].empty?
+    if Option.first.action_active
+      kb.append([ACTION_WORD]) if logged_in?
+      kb.append([{ text: REGISTER_TO_ACTION_WORD, request_contact: true }]) unless logged_in?
+    end
     {
         keyboard: kb,
         resize_keyboard: true,

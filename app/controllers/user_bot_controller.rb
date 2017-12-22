@@ -18,8 +18,6 @@ class UserBotController < Telegram::Bot::UpdatesController
 
   before_action :logged_in?, only: %i[custom_fields delivery]
 
-
-
   INTRO_KB = 'Продолжить'.freeze
 
   def start(*args)
@@ -48,6 +46,26 @@ class UserBotController < Telegram::Bot::UpdatesController
                                        chat_id: chat['id'])
       session[:client_id] = @user.id
     end
+  end
+
+  def bonus(*)
+    option = Option.first
+    return respond_with :message, text:'Акция закончилась' unless option.action_active
+    save_context :bonus
+    login
+    return respond_with :message, text: 'Зарегестрируйтесь для участия в акции', reply_markup:{
+        keyboard: [
+            [{ text: OrderService::REGISTER,  request_contact: true}]
+        ],
+        resize_keyboard: true,
+        one_time_keyboard: true,
+        selective: true
+    } unless logged_in?
+    respond_with :message, text: 'Второй раз не получится' if @client.action_used
+    @client.bonus_points = option.bonus_points || 100 unless @client.action_used
+    @client.action_used = true
+    @client.save
+    category
   end
 
   def message(message)

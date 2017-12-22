@@ -31,6 +31,14 @@ class AdminBotController < Telegram::Bot::UpdatesController
     end
   end
 
+  def order(*args)
+    value = !args.empty? ? args.join(' ') : nil
+    return respond_with :message, text: 'Такого заказа нет' unless value
+    order = Order.where(id: value.to_i).first
+    return respond_with :message, text: 'Такого заказа нет' unless order
+    respond_with_one_order order
+  end
+
   def set_cost(*args)
     save_context :set_cost
     value = !args.empty? ? args.join(' ') : nil
@@ -67,6 +75,14 @@ class AdminBotController < Telegram::Bot::UpdatesController
         message = payload['message']
         bot.delete_message(chat_id: message['chat']['id'], message_id: message['message_id'])
         answer_callback_query 'Заказ помечен, как выполненный'
+      when AdminOrderService::CALLBACK_TYPE_CLIENT_BONUS
+        order = Order.where(id: json_data['order_id']).first
+        return unless order
+        client = order.client
+        client.bonus_points -= order.total
+        client.bonus_points = 0 if client.bonus_points < 0
+        client.save
+        answer_callback_query 'Бонусы списаны'
       else answer_callback_query 'Произошла ошибка'
     end
   end

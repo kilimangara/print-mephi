@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20171219211732) do
+ActiveRecord::Schema.define(version: 20171221232213) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -38,6 +38,8 @@ ActiveRecord::Schema.define(version: 20171219211732) do
     t.integer "chat_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "bonus_points", default: 0
+    t.boolean "action_used", default: false
   end
 
   create_table "custom_fields", force: :cascade do |t|
@@ -82,6 +84,8 @@ ActiveRecord::Schema.define(version: 20171219211732) do
     t.string "intro", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.boolean "action_active", default: false
+    t.integer "bonus_points", default: 100
   end
 
   create_table "order_lines", force: :cascade do |t|
