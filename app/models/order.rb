@@ -55,7 +55,7 @@ class Order < ApplicationRecord
   end
 
   def spam?
-    Order.where('created_at >= ? AND client_id', 5.minutes.ago, client.id).count >= ORDER_LIMIT
+    Order.where('created_at >= ? AND client_id = ?', 5.minutes.ago, client.id).count >= ORDER_LIMIT
   end
 
   def order_values_as_text
