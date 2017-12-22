@@ -112,7 +112,6 @@ class UserBotController < Telegram::Bot::UpdatesController
     if session[:variant_id]
       q = value.to_i
       add_product(session[:variant_id], q)
-      respond_with :message, text: 'Товар добавлен в корзину'
       session[:variant_id] = nil
       session[:category_parent_id] = nil
       return cart
