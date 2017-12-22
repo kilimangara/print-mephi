@@ -23,11 +23,7 @@ class UserBotController < Telegram::Bot::UpdatesController
   def start(*args)
     value = !args.empty? ? args.join(' ') : nil
     if value == INTRO_KB
-      pre_build_order_fields
-      last_not_fulfilled
-      send_step
-      save_context :custom_fields
-      return
+      return category
     end
     session[:cart] = []
     session[:category_parent_id] = nil
@@ -123,19 +119,23 @@ class UserBotController < Telegram::Bot::UpdatesController
     product = Product.where(name: value, hidden: false).first
     return product_missing unless product
     session[:variant_id] = product.variants.first.id
-    respond_with :message, text: 'Теперь выберите количество экземлляров'
+    pre_build_order_fields
+    last_not_fulfilled
+    send_step
+    save_context :custom_fields
   end
 
 
   def custom_fields(*)
     save_context :custom_fields
     unless last_not_fulfilled
-      category
-      save_context :delivery
+      respond_with :message, text: 'Введите количество экземляров'
+      save_context :product
     end
     if resolve_by_type!(to_fulfill[:field_type], payload)
       if !last_not_fulfilled
-        category
+        respond_with :message, text: 'Введите количество экземляров'
+        save_context :product
       else
         send_step
       end
@@ -155,8 +155,10 @@ class UserBotController < Telegram::Bot::UpdatesController
     if order.errors.empty?
       after_order
       respond_with :message,
-                   text: "Ваш заказ № #{order.id} принят в обработку.\n#{order.delivery_variant_as_text}\n#{order.order_values_as_text}\n#{order.order_lines_as_text}"
-      return category
+                   text: "Ваш заказ № #{order.id} принят в обработку.\n#{order.delivery_variant_as_text}\n#{order.order_values_as_text}\n#{order.order_lines_as_text}",
+                   reply_markup: intro_keyboard
+      save_context :start
+      return
     end
     respond_with :message, text: "Возникла ошибка"
   end
@@ -221,6 +223,4 @@ class UserBotController < Telegram::Bot::UpdatesController
         selective: true
     }
   end
-
-
 end
