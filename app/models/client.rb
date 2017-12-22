@@ -10,7 +10,6 @@ class Client < ApplicationRecord
 
   def bonus_points_changed
     bot = Telegram.bots[:user]
-    chat_id = client.chat_id
     bot.send_message(chat_id: chat_id, text: "Кол-во бонусных баллов изменено.\nУ вас #{bonus_points} баллов")
   end
 end
