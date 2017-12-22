@@ -88,7 +88,7 @@ class AdminBotController < Telegram::Bot::UpdatesController
       when AdminOrderService::CALLBACK_TYPE_BAN_USER
         client = Client.where(id: json_data['client_id']).first
         return unless client
-        BlackList.create(reason: DEFAULT_REASON, chat: client.chat_id)
+        BlackList.create(reason: DEFAULT_REASON, chat_id: client.chat_id)
         answer_callback_query 'Добавлен в черный список'
       else answer_callback_query 'Произошла ошибка'
     end
