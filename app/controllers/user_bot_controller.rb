@@ -18,7 +18,7 @@ class UserBotController < Telegram::Bot::UpdatesController
 
   before_action :logged_in?, only: %i[custom_fields delivery]
 
-  INTRO_KB = 'Продолжить'.freeze
+  INTRO_KB = 'Распечатать!'.freeze
 
   def start(*args)
     value = !args.empty? ? args.join(' ') : nil
