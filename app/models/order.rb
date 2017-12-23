@@ -43,7 +43,7 @@ class Order < ApplicationRecord
   end
 
   def delivery_variant_as_text
-    "Вариант доставки #{delivery_variant.name}"
+    "Вариант доставки: #{delivery_variant.name}"
   end
 
   def order_lines_as_text
@@ -63,7 +63,7 @@ class Order < ApplicationRecord
     order_values.each do |ov|
       case ov.field_type
         when CustomField::TEXT_TYPE
-          text << "Комментарий #{ov.value}\n"
+          text << "Комментарий: #{ov.value}\n"
         when CustomField::FILE_TYPE
           user_bot = Telegram.bots[:user]
           res = user_bot.get_file(file_id: ov.value)

@@ -55,17 +55,11 @@ module OrderService
       quantity = session[:cart].at(index)[:quantity]
       total_price += variant.price * quantity
       text = "#{index + 1}.#{variant.product.name} #{variant.name} x #{quantity}"
-      response = respond_with :message, text: text, reply_markup: {
-        inline_keyboard: [
-          [{ text: 'Удалить', callback_data: JSON.generate(type: CALLBACK_DELETE_POSITION, index: index) }]
-        ]
-      }
+      response = respond_with :message, text: text,
+                                        reply_markup: build_cart_keyboard_with_inline(index)
       session[:messages_to_delete].push(response['result']['message_id'])
     end
     session[:total] = total_price
-    response = respond_with :message, text: "Заказ будет переоценен продавцом!",
-                                      reply_markup: build_cart_keyboard
-    session[:messages_to_delete].push(response['result']['message_id'])
   end
 
   def delete_messages
@@ -85,8 +79,8 @@ module OrderService
 
   def build_cart_keyboard
     kb = []
-    kb.append([{ text: REGISTER, request_contact: true }]) unless self.logged_in?
-    if self.logged_in?
+    kb.append([{ text: REGISTER, request_contact: true }]) unless logged_in?
+    if logged_in?
       kb.append([CREATE_ORDER]) unless session[:cart].empty?
     end
     kb.append([BACK])
@@ -98,16 +92,21 @@ module OrderService
     }
   end
 
+  def build_cart_keyboard_with_inline(index)
+    params = build_cart_keyboard
+    params.merge(inline_keyboard: [[{ text: 'Удалить', callback_data: JSON.generate(type: CALLBACK_DELETE_POSITION, index: index) }]])
+  end
+
   def build_delivery_keyboard
     kb = []
     DeliveryVariant.where(active: true).each do |d|
       kb.append([d.name])
     end
     {
-        keyboard: kb,
-        resize_keyboard: true,
-        one_time_keyboard: true,
-        selective: true
+      keyboard: kb,
+      resize_keyboard: true,
+      one_time_keyboard: true,
+      selective: true
     }
   end
 end
