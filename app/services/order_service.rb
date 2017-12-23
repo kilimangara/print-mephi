@@ -2,7 +2,7 @@ module OrderService
   require 'json'
 
   CREATE_ORDER = 'Оформить заказ'.freeze
-  BACK = 'Обратно в категории'.freeze
+  BACK = 'Хочу другое!'.freeze
   REGISTER = 'Зарегистрироваться'.freeze
 
   CALLBACK_DELETE_POSITION = 0
@@ -56,7 +56,7 @@ module OrderService
       total_price += variant.price * quantity
       text = "#{index + 1}.#{variant.product.name} #{variant.name} x #{quantity}"
       response = respond_with :message, text: text,
-                                        reply_markup: build_cart_keyboard_with_inline(index)
+                                        reply_markup: build_cart_keyboard
       session[:messages_to_delete].push(response['result']['message_id'])
     end
     session[:total] = total_price

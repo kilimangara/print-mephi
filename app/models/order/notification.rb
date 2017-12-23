@@ -10,7 +10,7 @@ class Order
 
     def send_notification
       bot = Telegram.bots[:admin]
-      text = "Новый заказ №#{id}\n#{order_lines_as_text}\n#{delivery_variant_as_text}\n#{order_values_as_text}"
+      text = "Новый заказ №#{id}\n#{order_lines_as_text}\n#{delivery_variant_as_text}\n#{order_values_as_text}\n#{client.format_as_text}"
       Merchant.all.each do |m|
         bot.send_message(chat_id: m.chat_id, text: text) if m.chat_id
       end
